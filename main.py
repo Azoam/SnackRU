@@ -1,4 +1,4 @@
-from slackclient import slackClient
+from slackclient import SlackClient
 from sqlalchemy.sql import select
 from sqlalchemy import create_engine
 import os
@@ -13,24 +13,36 @@ BOTID = config.botID
 AT_BOT = "<@"+BOTID+">"
 
 def grab_user(use):
-    api=slack_client.api_call('users.list')
+    api = slack_client.api_call('users.list')
     if api.get('ok'):
-        users = api_get('members')
+        users = api.get('members')
         for user in users:
             if 'name' in user and user.get('id') == use:
                 return user['name']
 
 def message(channelid, message):
-    slack_client.api_call("Chat.postMessage",channel=channelid,
+    slack_client.api_call("chat.postMessage",channel=channelid,
     text=message, as_user=True)
+
+
+def username_to_id(username):
+    api =slack_client.api_call('users.list')
+    if (api.get('ok')):
+        users = api['members']
+     
+        for user in users:
+        
+            if 'id'  in user and user['name'] == username:
+                return user['id']
 
 
 def parse_slack_output(slack_rtm_output):
     output_list = slack_rtm_output
     if output_list and len(output_list) > 0:
-        for output and 'text' in output and AT_BOT in output['text']:
-            user_name = grabe_user(output['user'])
-            return output['text'].split(AT_BOT[1].strip().lower(), \
+       for output in output_list:
+           if output and 'text' in output and AT_BOT in output['text']:  
+            user_name = grab_user(output['user'])
+            return output['text'].split(AT_BOT)[1].strip().lower(), \
                    output['channel'], \
                    output['user'], \
                    user_name
@@ -40,8 +52,11 @@ def parse_slack_output(slack_rtm_output):
 
 def handle_command(command,channel,userid,username):
     dividedCommand = command.split()
-    
-    if(dividedCommand[0] == "hungry"):
+     
+    if(dividedCommand[0] == "test"):
+        message(userid,"Sup diggity dog")
+
+    elif(dividedCommand[0] == "hungry"):
         return
 
     else:
@@ -58,7 +73,7 @@ def handle_command(command,channel,userid,username):
 
 #All functions should be above the main
 
-if __name__ = "__main__":
+if __name__ == "__main__":
     READ_WEBSOCKET_DELAY = 1
     if slack_client.rtm_connect():
         print("Bot connected and running!")
